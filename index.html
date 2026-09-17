@@ -99,7 +99,7 @@
 
       <div class="form-group">
         <label>出生年月日 (民國) <span class="required">*</span></label>
-        <input type="text" id="birthday" name="birthday" required placeholder="格式範例：088/08/01 或 880801" pattern="^\d{2,3}[\/\-]?\d{1,2}[\/\-]?\d{1,2}$" title="請輸入民國出生年月日，例如 088/08/01 或 880801">
+        <input type="text" id="birthday" name="birthday" required placeholder="格式範例：071/11/20 或 711120" pattern="^\d{2,3}[\/\-]?\d{1,2}[\/\-]?\d{1,2}$" title="請輸入民國出生年月日，例如 071/11/20 或 711120">
         <small style="color: #666; font-size: 12px;">請輸入民國年，例如：71年11月20日請輸入 71/11/20</small>
       </div>
 
@@ -130,7 +130,7 @@
 
   <script>
     // 您的 Google Apps Script 部署應用程式網址
-    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzp4owate4PHXuZajpZwI0yJVz6LgQGHaRFCffOTiUykVj8DdE8ZBO78_bBsAiwCfMd/exec";
+    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxcHFwho67n9wi9XUvbRqzAhbzd_QntpLQRveM4v9puO-iL7Qx3v5mRuldCwewnVg7I/exec";
 
     function toggleAddress() {
       var hukou = document.getElementById('hukouAddress').value;
@@ -190,7 +190,7 @@
       setTimeout(function() {
         loading.style.display = 'none';
         msg.style.color = 'green';
-        msg.innerHTML = '報名資料已送出！楠梓區選務中心感謝您對選務工作的支持。';
+        msg.innerHTML = '報名資料已送出！若身分證無重複且未額滿，將自動記入試算表。';
         document.getElementById('regForm').reset();
         btn.disabled = false;
       }, 1000);
