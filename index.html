@@ -24,6 +24,7 @@
       text-align: center;
       color: #333;
       margin-bottom: 25px;
+      font-size: 22px;
     }
     .form-group {
       margin-bottom: 20px;
@@ -68,8 +69,7 @@
       background-color: #95a5a6;
       cursor: not-allowed;
     }
-    #loading {
-      display: none;
+    #loading, #initLoading {
       text-align: center;
       color: #e67e22;
       font-weight: bold;
@@ -80,12 +80,32 @@
       text-align: center;
       font-weight: bold;
     }
+    #fullNotice {
+      display: none;
+      background-color: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+      padding: 20px;
+      border-radius: 6px;
+      text-align: center;
+      font-size: 18px;
+      font-weight: bold;
+      margin-top: 20px;
+    }
   </style>
 </head>
 <body>
   <div class="container">
     <h2>楠梓區投開票所工作人員報名系統</h2>
-    <form id="regForm" onsubmit="handleFormSubmit(event)">
+    
+    <div id="initLoading">正在檢查名額狀態，請稍候...</div>
+
+    <div id="fullNotice">
+      🚫 報名已截止<br><br>
+      本次投開票所工作人員報名人數已達上限，感謝各位市民的熱情參與！
+    </div>
+
+    <form id="regForm" onsubmit="handleFormSubmit(event)" style="display: none;">
       
       <div class="form-group">
         <label>真實姓名 <span class="required">*</span></label>
@@ -99,7 +119,7 @@
 
       <div class="form-group">
         <label>出生年月日 (民國) <span class="required">*</span></label>
-        <input type="text" id="birthday" name="birthday" required placeholder="格式範例：071/11/20 或 711120" pattern="^\d{2,3}[\/\-]?\d{1,2}[\/\-]?\d{1,2}$" title="請輸入民國出生年月日，例如 071/11/20 或 711120">
+        <input type="text" id="birthday" name="birthday" required placeholder="格式範例：081/11/22 或 811122" pattern="^\d{2,3}[\/\-]?\d{1,2}[\/\-]?\d{1,2}$" title="請輸入民國出生年月日，例如 081/11/22 或 811122">
         <small style="color: #666; font-size: 12px;">請輸入民國年，例如：71年11月20日請輸入 71/11/20</small>
       </div>
 
@@ -123,14 +143,34 @@
       </div>
 
       <button type="submit" id="submitBtn">確認送出報名</button>
-      <div id="loading">資料提交中，請稍候...</div>
+      <div id="loading" style="display:none;">資料提交中，請稍候...</div>
       <div id="msg"></div>
     </form>
   </div>
 
   <script>
-    // 您的 Google Apps Script 部署應用程式網址
-    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzMbMqfZQx9eDTvO05wl6uaaiQxXhfPTNfn2QmFeqwgrqpCl1nzhUpEnrDphy0w8Tze/exec";
+    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycby-sf37C9CSnghb1m96IgDQqXP171ih-iyray9GQQKryjOBsfZQnL1rcg8yuJUyUSfQ/exec";
+
+    // 網頁載入時先檢查是否額滿
+    window.onload = function() {
+      // 透過 fetch 查詢名額（呼叫後端用 script.google.com 帶參數，或直接用 google.script.run）
+      // 因為是放在 GitHub 獨立網頁，我們用 GET 請求到同一個 WEB_APP_URL 帶 action 檢查
+      fetch(WEB_APP_URL + "?action=check")
+        .then(res => res.json())
+        .then(data => {
+          document.getElementById('initLoading').style.display = 'none';
+          if (data.isFull) {
+            document.getElementById('fullNotice').style.display = 'block';
+          } else {
+            document.getElementById('regForm').style.display = 'block';
+          }
+        })
+        .catch(err => {
+          // 若無法連線檢查，預設開放表單但由後端嚴格把關
+          document.getElementById('initLoading').style.display = 'none';
+          document.getElementById('regForm').style.display = 'block';
+        });
+    };
 
     function toggleAddress() {
       var hukou = document.getElementById('hukouAddress').value;
@@ -168,32 +208,27 @@
         phone: document.getElementById('phone').value
       };
       
-      // 使用 Fetch API 將資料 POST 傳送給後端
       fetch(WEB_APP_URL, {
         method: 'POST',
-        mode: 'no-cors', // Google Apps Script 跨域標準設定
+        mode: 'no-cors',
         headers: {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify(formData)
       })
       .then(response => {
-        // 因 no-cors 限制無法讀取回傳內容，改用主動寫入成功的提示（若要即時檢查滿額與否，可改回標準呼叫，但需確保權限正確）
-        // 為確保 150 人及重複身分檢查能正常反饋，改用標準 GET/JSONP 或重新整理確認：
-      })
-      .catch(error => {
-        // 錯誤處理
-      });
-
-      // 由於 fetch 在 no-cors 下回傳 opaque，我們改用傳統優化的背景重新整理或用以下方式模擬確保使用者體驗：
-      // 實際更穩健的做法：直接將資料送出後顯示成功提示
-      setTimeout(function() {
         loading.style.display = 'none';
         msg.style.color = 'green';
         msg.innerHTML = '報名資料已送出！楠梓區選務中心感謝您對選務工作的支持。';
         document.getElementById('regForm').reset();
         btn.disabled = false;
-      }, 1000);
+      })
+      .catch(error => {
+        loading.style.display = 'none';
+        msg.style.color = 'red';
+        msg.innerHTML = '連線錯誤，請稍後再試。';
+        btn.disabled = false;
+      });
     }
   </script>
 </body>
