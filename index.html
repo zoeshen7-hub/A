@@ -149,24 +149,28 @@
   </div>
 
   <script>
-    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxvLhh1es5Y7holMNQS6M2TQ3tVoPB91-mHD3U-txTH2zTu-QJMUYpt-zVmODarnyc/exec";
+    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzTrxtxU-xMGIS_vaWX1o5-5jE49sNBZ9KGlCaQG0Z65nrNRGM1L3wzSWKT4Ll-r22W/exec";
 
-    // 網頁載入時自動檢查是否已滿 150 人
+    // 透過 JSONP 跨域抓取名額狀態
+    function checkQuota() {
+      var script = document.createElement('script');
+      script.src = WEB_APP_URL + "?callback=handleResponse";
+      document.body.appendChild(script);
+    }
+
+    function handleResponse(data) {
+      document.getElementById('initLoading').style.display = 'none';
+      if (data.isFull) {
+        document.getElementById('fullNotice').style.display = 'block';
+        document.getElementById('regForm').style.display = 'none';
+      } else {
+        document.getElementById('fullNotice').style.display = 'none';
+        document.getElementById('regForm').style.display = 'block';
+      }
+    }
+
     window.onload = function() {
-      fetch(WEB_APP_URL + "?action=check")
-        .then(res => res.json())
-        .then(data => {
-          document.getElementById('initLoading').style.display = 'none';
-          if (data.isFull) {
-            document.getElementById('fullNotice').style.display = 'block';
-          } else {
-            document.getElementById('regForm').style.display = 'block';
-          }
-        })
-        .catch(err => {
-          document.getElementById('initLoading').style.display = 'none';
-          document.getElementById('regForm').style.display = 'block';
-        });
+      checkQuota();
     };
 
     function toggleAddress() {
@@ -219,6 +223,8 @@
         msg.innerHTML = '報名資料已送出！楠梓區選務中心感謝您對選務工作的支持';
         document.getElementById('regForm').reset();
         btn.disabled = false;
+        // 重新檢查是否額滿
+        checkQuota();
       })
       .catch(error => {
         loading.style.display = 'none';
